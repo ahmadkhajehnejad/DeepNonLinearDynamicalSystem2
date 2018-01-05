@@ -1,3 +1,7 @@
 data/
+data/__pycache__
+deepModel/__pycache__
+KalmannModel/__pycache__
+__pycache__
 log/
 .DS_store
