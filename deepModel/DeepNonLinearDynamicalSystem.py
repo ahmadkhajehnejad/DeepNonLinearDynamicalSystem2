@@ -8,8 +8,8 @@ from deepModel.Trainer import *
 
 class DeepNonLinearDynamicalSystem:
     def __init__(self):
-        self.w_dim, self.z_dim, self.v_dim, self.x_dim, self.u_dim = 4, 4, 4, 2, 2
-        self.intermediate_dim = 4
+        self.w_dim, self.z_dim, self.v_dim, self.x_dim, self.u_dim = 10, 4, 4, 40*40, 2
+        self.intermediate_dim = 500
         self.kalmannModel = KalmannModel(self.z_dim, self.w_dim, self.v_dim)
         
         x = Input(shape=(self.x_dim,))
@@ -35,7 +35,7 @@ class DeepNonLinearDynamicalSystem:
         self.action_encoder.add(Dense(4, input_shape=(self.u_dim,), activation='relu'))
         self.action_encoder.add(Dense(self.v_dim, activation=None))
         
-        self.trainer = Trainer(self, save_history=True)
+        self.trainer = Trainer(self)
         
     def encode(self, x_all, u_all):
         w_all = [self.observation_encoder.predict(a) for a in x_all]

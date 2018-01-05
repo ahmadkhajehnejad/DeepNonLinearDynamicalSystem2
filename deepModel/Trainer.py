@@ -7,7 +7,7 @@ from keras import optimizers
 import tensorflow as tf
 
 class Trainer:
-    def __init__(self, deepNonLineerDynamicalSystem, save_history=False):
+    def __init__(self, deepNonLineerDynamicalSystem):
         self.deepNonLinearDynamicalSystem = deepNonLineerDynamicalSystem
         self.IterNum_EM = 10
         self.IterNum_CoordAsc = 5
@@ -17,19 +17,9 @@ class Trainer:
         #self.iter_EM = -1
         #self.iter_CoorAsc = -1
         
-        self.save_history = save_history
-        if self.save_history==True:
-            self.logger = Logger(self)
-            self.hist_loss = {'observation_recons_loss':[], 'w_unit_norm_loss':[], 'w_LDS_loss':[], 'v_LDS_loss':[]}
-            self.hist_loglik_w = []
-            self.hist_EM_obj = []
-
-#    def _sqr_diff(X):
-#        tmp = K.tile(K.reshape(K.sum(K.square(X), axis=1), [-1,1]), [1,K.shape(X)[0]])
-#        return tmp + K.transpose(tmp) - 2*tf.matmul(X, tf.transpose(X))
-#
-#    def _autoenc_reg_loss(x_true,w):
-#        return K.mean(K.exp(-Trainer._sqr_diff(x_true)/kernel_sigma_2) * Trainer._sqr_diff(w), axis=-1) / K.mean(K.sum(K.square(w),axis=1))
+        self.hist_loss = {'observation_recons_loss':[], 'w_unit_norm_loss':[], 'w_LDS_loss':[], 'v_LDS_loss':[]}
+        self.hist_loglik_w = []
+        self.hist_EM_obj = []
 
     def _recons_loss(self, x_true, x_bar):
         return self.deepNonLinearDynamicalSystem.x_dim * keras.losses.mean_squared_error(x_true, x_bar) #keras.metrics.binary_crossentropy(x_true, x_bar)# might be better to be changed to binary_cross_entropy
@@ -50,22 +40,20 @@ class Trainer:
         u_train = np.concatenate(u_all_train)
         #x_validation = np.concatenate(x_all_validation)
         #u_validation = np.concatenate(u_all_validation)
+
+        [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
+        [self.Ezt, self.EztztT, self.Ezt_1ztT] = self.deepNonLinearDynamicalSystem.kalmannModel.expectation(self.w_all,self.v_all)
+        self.deepNonLinearDynamicalSystem.kalmannModel.maximization(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all)
         
         for self.iter_EM in range(0,self.IterNum_EM):
             
-            [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
-            
+            [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)            
             [self.Ezt, self.EztztT, self.Ezt_1ztT] = self.deepNonLinearDynamicalSystem.kalmannModel.expectation(self.w_all,self.v_all)
-
+            
             if self.iter_EM == 0:
-                self.deepNonLinearDynamicalSystem.kalmannModel.maximization(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all)
-                '''
-                if self.save_history==True:
-                    self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(Ezt, EztztT, Ezt_1ztT, self.w_all, self.v_all))
-                    self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
-                    self.hist_loss['observation_recons_loss'].append()
-                    self.hist_loss['w_unit_norm_loss'].append()
-                '''                
+                self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
+                self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
+
             
             for self.iter_CoorAsc in range(self.IterNum_CoordAsc):
                 
@@ -79,18 +67,14 @@ class Trainer:
                 self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train, EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
-                                   lr=0.005, loss_weights=[1., .1, 0.],
+                                   lr=0.001, loss_weights=[1., 1., 1.],
                                    epochs=200, batch_size=self.batch_size)
-                self.train_network(self.DeepNonLinearDynamicalSystem.observation_autoencoder,\
-                                   net_in=x_train, net_out=[x_train, x_train, EzT_CT_Rinv_plus_dT_Rinv],\
-                                   losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
-                                   lr=0.005, loss_weights=[1., .1, 1.],
-                                   epochs=1000, batch_size=self.batch_size)
+
+                [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
+                self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
+                self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
                 
                 '''
-                if self.save_history==True:
-                    self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(Ezt, EztztT, Ezt_1ztT, self.w_all, self.v_all))
-                    self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
                     self.hist_loss['observation_recons_loss'].append()
                     self.hist_loss['w_unit_norm_loss'].append()
                 '''
@@ -106,29 +90,32 @@ class Trainer:
                                    lr=0.00005, loss_weights=1,
                                    epochs=200, batch_size=self.batch_size)
 
+                [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
+                self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
+                self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
+                
                 '''                
-                if self.save_history==True:
-                    self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(Ezt, EztztT, Ezt_1ztT, self.w_all, self.v_all))
-                    self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
-                    self.hist_loss['observation_recons_loss'].append()
-                    self.hist_loss['w_unit_norm_loss'].append()
+                self.hist_loss['observation_recons_loss'].append()
+                self.hist_loss['w_unit_norm_loss'].append()
                 '''
                 
                 ############ update DLS parameters
                 
-                [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
-                
+                [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)                
                 self.deepNonLinearDynamicalSystem.kalmannModel.maximization(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all)
                 
+                self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
+                self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
+
+                print(self.hist_EM_obj)
+                print(self.hist_loglik_w)
+
                 '''
-                if self.save_history==True:
-                    self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(Ezt, EztztT, Ezt_1ztT, self.w_all, self.v_all))
-                    self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
-                    self.hist_loss['observation_recons_loss'].append()
-                    self.hist_loss['w_unit_norm_loss'].append()
-                    #log_save_weights(iter_EM, iter_CoorAsc)        
+                #log_save_weights(iter_EM, iter_CoorAsc)        
                 '''
+            '''
             #log_save_weights(iter_EM, -1)
+            '''
 
     def _compute_EzT_CT_Rinv_plus_dT_Rinv(self):
         w_dim = self.deepNonLinearDynamicalSystem.w_dim
