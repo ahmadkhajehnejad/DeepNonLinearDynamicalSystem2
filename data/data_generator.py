@@ -132,6 +132,6 @@ def get_moving_particle_dataset_trajectory(filename,
         print('Loading plane dataset', filename)
         return pickle.load(open(filename, 'rb'))
 
-get_moving_particle_dataset_trajectory('moving_particle_trajectory_train', num_samples = 400, num_epochs = 15)
-get_moving_particle_dataset_trajectory('moving_particle_trajectory_test', num_samples = 400, num_epochs = 5)
+get_moving_particle_dataset_trajectory('moving_particle_trajectory_train.data', num_samples = 400, num_epochs = 15)
+get_moving_particle_dataset_trajectory('moving_particle_trajectory_test.data', num_samples = 400, num_epochs = 5)
       
