@@ -1,5 +1,6 @@
 import datetime
 import os
+import pickle
 
 class Logger:
     
@@ -8,22 +9,29 @@ class Logger:
         
         Logger._make_dir('./log')
         nw = datetime.datetime.now()
-        self.log_dir = './log/' + str(nw.year) + '.' + str(nw.month) + '.' +\
-                        str(nw.day) + '.' + str(nw.hour) + '.' + str(nw.minute) + '.' + str(nw.second)
-        Logger._make_dir(self.log_dir)
+        self.base_log_dir = './log/' + str(nw.year) + '.' + str(nw.month) + '.' +\
+                        str(nw.day) + '.' + str(nw.hour) + '.' + str(nw.minute) + '.' + str(nw.second) + '/'
+        Logger._make_dir(self.base_log_dir)
  
     def _make_dir(dirname):           
         if not(os.path.isdir(dirname)):
             os.mkdir(dirname)
+
+    def save_hist(self):
+        Logger._make_dir(self.base_log_dir + str(self.trainer.iter_EM) + '/')
+        log_dir = self.base_log_dir + str(self.trainer.iter_EM) + '/' + str(self.trainer.iter_CoorAsc) + '/'
+        Logger._make_dir(log_dir)
+        pickle.dump(self.trainer.hist_EM_obj, open(log_dir + 'hist_EM_obj.pkl', 'wb'))
+        pickle.dump(self.trainer.hist_loglik_w, open(log_dir + 'hist_loglik_w.pkl', 'wb'))
+#        pickle.dump(reg_error, open('./reg_error.pkl', 'wb'))
+#        pickle.dump([hist_0,hist_1,hist_2], open('./fit_hists.pkl', 'wb'))
         
-        
-'''    
-    def print_EM_objective_function(self):
-        [w_all, v_all] = self.trainer.deepNonLinearDynamicalSystem.
-        for i in range(len(x_all)):
-            w_all[i] = enc.predict(x_all[i])
-        for i in range(len(u_all)):
-            v_all[i] = act_map.predict(u_all[i])
-        E_log.append(E_log_P_x_and_z(Ezt, EztztT, Ezt_1ztT,w_all,A,b,H,v_all,C,d,Q,R,mu_0,Sig_0))
-        print('E[log...] = ', E_log)
-'''
+    def save_params(self):
+        Logger._make_dir(self.base_log_dir + str(self.trainer.iter_EM) + '/')
+        log_dir = self.base_log_dir + str(self.trainer.iter_EM) + '/' + str(self.trainer.iter_CoorAsc) + '/'
+        Logger._make_dir(log_dir)
+
+        self.trainer.deepNonLinearDynamicalSystem.observation_autoencoder.save_weights(log_dir + 'observation_autoencoder_params.h5')
+        self.trainer.deepNonLinearDynamicalSystem.action_encoder.save_weights(log_dir + 'action_encoder_params.h5')
+        [A,b,H,C,d,Q,R,mu_0,Sig_0] = self.trainer.deepNonLinearDynamicalSystem.kalmannModel.getParams()
+        pickle.dump([A,b,H,C,d,Q,R,mu_0,Sig_0], open(log_dir + 'LDS_params.pkl', 'wb'))

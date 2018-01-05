@@ -5,6 +5,7 @@ import keras
 import keras.backend as K
 from keras import optimizers
 import tensorflow as tf
+from deepModel.Logger import *
 
 class Trainer:
     def __init__(self, deepNonLineerDynamicalSystem):
@@ -14,8 +15,7 @@ class Trainer:
         self.batch_size = 1000
         self.Ezt, self.EztztT, self.Ezt_1ztT = None, None, None
         self.w_all, self.v_all = None, None
-        #self.iter_EM = -1
-        #self.iter_CoorAsc = -1
+        self.logger = Logger(self)
         
         self.hist_loss = {'observation_recons_loss':[], 'w_unit_norm_loss':[], 'w_LDS_loss':[], 'v_LDS_loss':[]}
         self.hist_loglik_w = []
@@ -30,7 +30,7 @@ class Trainer:
 
     def train_network(self, model, net_in, net_out, losses, lr, loss_weights, epochs, batch_size):
         model.compile(optimizer=optimizers.Adam(lr=lr,beta_1=0.1), loss=losses, loss_weights=loss_weights)
-        model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0)
+        model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=1)
                 
 
 
@@ -68,7 +68,7 @@ class Trainer:
                                    net_in=x_train, net_out=[x_train, x_train, EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
                                    lr=0.001, loss_weights=[1., 1., 1.],
-                                   epochs=200, batch_size=self.batch_size)
+                                   epochs=1, batch_size=self.batch_size)
 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
                 self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
@@ -84,11 +84,11 @@ class Trainer:
                 v_LDS_loss = self._get_v_LDS_loss()
                 
                 EztT_minus_Ezt_1TAT_bT_alltimes_QinvH = self._compute_EztT_minus_Ezt_1TAT_bT_alltimes_QinvH()
-                self.train_network(self.DeepNonLinearDynamicalSystem.action_map,\
+                self.train_network(self.deepNonLinearDynamicalSystem.action_encoder,\
                                    net_in=u_train, net_out=EztT_minus_Ezt_1TAT_bT_alltimes_QinvH,\
                                    losses = v_LDS_loss,\
-                                   lr=0.001, loss_weights=1,
-                                   epochs=200, batch_size=self.batch_size)
+                                   lr=0.001, loss_weights=[1],
+                                   epochs=1, batch_size=self.batch_size)
 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
                 self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
@@ -110,12 +110,8 @@ class Trainer:
                 print(self.hist_EM_obj)
                 print(self.hist_loglik_w)
 
-                '''
-                #log_save_weights(iter_EM, iter_CoorAsc)        
-                '''
-            '''
-            #log_save_weights(iter_EM, -1)
-            '''
+                self.logger.save_hist()
+                self.logger.save_params()
 
     def _compute_EzT_CT_Rinv_plus_dT_Rinv(self):
         w_dim = self.deepNonLinearDynamicalSystem.w_dim
