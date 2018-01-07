@@ -68,7 +68,7 @@ class Trainer:
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train, EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
-                                   lr=0.0001, loss_weights=[1., 1., 1.],
+                                   lr=0.0005, loss_weights=[1., 1., 1.],
                                    epochs=1000, batch_size=self.batch_size)
                 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
@@ -86,7 +86,7 @@ class Trainer:
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.action_encoder,\
                                    net_in=u_train, net_out=EztT_minus_Ezt_1TAT_bT_alltimes_QinvH,\
                                    losses = v_LDS_loss,\
-                                   lr=0.0001, loss_weights=[1],
+                                   lr=0.0005, loss_weights=[1],
                                    epochs=1000, batch_size=self.batch_size)
 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
