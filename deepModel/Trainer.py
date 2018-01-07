@@ -30,7 +30,8 @@ class Trainer:
 
     def train_network(self, model, net_in, net_out, losses, lr, loss_weights, epochs, batch_size):
         model.compile(optimizer=optimizers.Adam(lr=lr,beta_1=0.1), loss=losses, loss_weights=loss_weights)
-        model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0)
+        h = model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0).history.values()
+        return list(h)
                 
 
 
@@ -64,40 +65,36 @@ class Trainer:
                     #AE.load_weights('./cache_0_0_simpleAE_params.h5')
                 
                 EzT_CT_Rinv_plus_dT_Rinv = self._compute_EzT_CT_Rinv_plus_dT_Rinv()
-                self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
+                h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train, EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
                                    lr=0.0001, loss_weights=[1., 1., 1.],
-                                   epochs=1000, batch_size=self.batch_size)
-
+                                   epochs=2, batch_size=self.batch_size)
+                
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
                 self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
                 self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
-                
-                '''
-                    self.hist_loss['observation_recons_loss'].append()
-                    self.hist_loss['w_unit_norm_loss'].append()
-                '''
-                
+
+                self.hist_loss['observation_recons_loss'].append(h_l[0])
+                self.hist_loss['w_unit_norm_loss'].append(h_l[1])
+                self.hist_loss['w_LDS_loss'].append(h_l[2])
                 ##########  update action_map parameters #############################                    
                 
                 v_LDS_loss = self._get_v_LDS_loss()
                 
                 EztT_minus_Ezt_1TAT_bT_alltimes_QinvH = self._compute_EztT_minus_Ezt_1TAT_bT_alltimes_QinvH()
-                self.train_network(self.deepNonLinearDynamicalSystem.action_encoder,\
+                h_l = self.train_network(self.deepNonLinearDynamicalSystem.action_encoder,\
                                    net_in=u_train, net_out=EztT_minus_Ezt_1TAT_bT_alltimes_QinvH,\
                                    losses = v_LDS_loss,\
                                    lr=0.0001, loss_weights=[1],
-                                   epochs=1000, batch_size=self.batch_size)
+                                   epochs=2, batch_size=self.batch_size)
 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
                 self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
                 self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
                 
-                '''                
-                self.hist_loss['observation_recons_loss'].append()
-                self.hist_loss['w_unit_norm_loss'].append()
-                '''
+                self.hist_loss['v_LDS_loss'].append(h_l[0])
+
                 
                 ############ update DLS parameters
                 
@@ -107,8 +104,9 @@ class Trainer:
                 self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
                 self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
 
-                print(self.hist_EM_obj)
-                print(self.hist_loglik_w)
+                print('EM_objective : ' + str(self.hist_EM_obj))
+                print('loglik_w : ' + str(self.hist_loglik_w))
+                print()
 
                 self.logger.save_hist()
                 self.logger.save_params()
