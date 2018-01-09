@@ -59,6 +59,7 @@ class Trainer:
             for self.iter_CoorAsc in range(self.IterNum_CoordAsc):
                 
                 ##### update observation_autoencoder parameters ###########################################
+
                 w_LDS_loss = self._get_w_LDS_loss()
                 
                 #if (iter_EM == 0) and (iter_CoorAsc == 0):
@@ -98,9 +99,9 @@ class Trainer:
                 
                 ############ update DLS parameters
                 
-                [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)                
                 self.deepNonLinearDynamicalSystem.kalmannModel.maximization(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all)
-                
+
+                [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)                                
                 self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
                 self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
 
