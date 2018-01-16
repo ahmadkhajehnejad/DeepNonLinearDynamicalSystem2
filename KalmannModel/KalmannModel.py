@@ -349,6 +349,35 @@ class KalmannModel:
                 E = E + np.matmul(np.matmul(w_minus_d.T,R_inv).reshape([1,-1]), np.matmul(self.C,Ezt[m][:,t].reshape([-1,1])).reshape([-1,1]))
         return E[0][0]
     
+    def get_w_LDS_loss(self, Ezt, EztztT, Ezt_1ztT, w_all):
+        E = 0
+        M = len(Ezt)
+        T = Ezt[0].shape[1]
+        Sig_0_inv = np.linalg.inv(self.Sig_0)
+        Q_inv = np.linalg.inv(self.Q)
+        R_inv = np.linalg.inv(self.R)
+        for m in range(M):
+            for t in range(T):
+                w_minus_d = w_all[m][t,:].reshape([-1,1]) - self.d
+                E = E - 0.5 * np.matmul(np.matmul(w_minus_d.T,R_inv).reshape([1,-1]), w_minus_d)
+                E = E + 0.5 * np.matmul(np.matmul(self.d.reshape([1,-1]), R_inv).reshape([1,-1]), self.d.reshape([-1,1]))
+                E = E + np.matmul(np.matmul(w_all[m][t,:].reshape([1,-1]),R_inv).reshape([1,-1]), np.matmul(self.C,Ezt[m][:,t].reshape([-1,1])).reshape([-1,1]))
+        return E[0][0]
+    def get_w_LDS_loss_2(self, Ezt, EztztT, Ezt_1ztT, w_all):
+        E = 0
+        M = len(Ezt)
+        T = Ezt[0].shape[1]
+        Sig_0_inv = np.linalg.inv(self.Sig_0)
+        Q_inv = np.linalg.inv(self.Q)
+        R_inv = np.linalg.inv(self.R)
+        for m in range(M):
+            for t in range(T):
+                w_minus_d = w_all[m][t,:].reshape([-1,1]) - self.d
+                E = E - 0.5 * np.matmul(np.matmul(w_all[m][t,:].reshape([1,-1]),R_inv).reshape([1,-1]), w_all[m][t,:].reshape([-1,1]))
+                E = E + np.matmul(w_all[m][t,:].reshape([1,-1]),np.matmul(R_inv, np.matmul(self.C,Ezt[m][:,t].reshape([-1,1])).reshape([-1,1]) + self.d.reshape([-1,1])))
+        return E[0][0]
+
+    
     def predict(self,w,v):
         z_dim = self.state_dim
         w_dim = self.observation_dim
