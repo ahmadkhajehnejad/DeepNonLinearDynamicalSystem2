@@ -125,7 +125,8 @@ class Trainer:
             EzT_CT_plus_dT = EzT_CT + np.tile(d.reshape([1,-1]),[EzT_CT.shape[0],1])
             EzT_CT_Rinv_plus_dT_Rinv[i_start:i_end,:] = np.matmul(EzT_CT_plus_dT, Rinv)
             i_start = i_end
-        return EzT_CT_Rinv_plus_dT_Rinv 
+        return EzT_CT_Rinv_plus_dT_Rinv
+
 
     def _get_w_LDS_loss(self):
         [_,_,_,_,_,_,R,_,_] = self.deepNonLinearDynamicalSystem.kalmannModel.getParams()
