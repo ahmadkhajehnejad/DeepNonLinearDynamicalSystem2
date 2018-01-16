@@ -29,13 +29,21 @@ class Trainer:
         #return -K.log(tf.norm(x_bar, axis=1))
         #return -K.log(1 - K.square(2*(K.sigmoid(K.constant(np.array([10*(tf.norm(x_bar, axis=1)-1)]))) - 0.5)))
 
+    '''
     def train_network(self, model, net_in, net_out, losses, lr, loss_weights, epochs, batch_size):
         model.compile(optimizer=optimizers.Adam(lr=lr,beta_1=0.1), loss=losses, loss_weights=loss_weights)
         h = model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0,\
-                      callbacks=[keras.callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=30, \
+                      callbacks=[keras.callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=20, \
                                                               verbose=1, mode='min')]).history.values()
         return list(h)
-                
+     '''
+    
+    def train_network(self, model, net_in, net_out, losses, lr, loss_weights, epochs, batch_size):
+        model.compile(optimizer='adam', loss=losses, loss_weights=loss_weights)
+        h = model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0,\
+                      callbacks=[keras.callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=20, \
+                                                              verbose=1, mode='min')]).history.values()
+        return list(h)         
 
 
     def train(self, x_all_train, u_all_train):#, x_all_validation, u_all_validation):
@@ -49,7 +57,6 @@ class Trainer:
         [self.Ezt, self.EztztT, self.Ezt_1ztT] = self.deepNonLinearDynamicalSystem.kalmannModel.expectation(self.w_all,self.v_all)
         self.deepNonLinearDynamicalSystem.kalmannModel.maximization(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all)
         
-        cnt = 0
         
         for self.iter_EM in range(0,self.IterNum_EM):
             
@@ -62,7 +69,6 @@ class Trainer:
 
             
             for self.iter_CoorAsc in range(self.IterNum_CoordAsc):
-                cnt += 1
                 ##### update observation_autoencoder parameters ###########################################
 
                 w_LDS_loss = self._get_w_LDS_loss()
@@ -85,7 +91,7 @@ class Trainer:
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train,EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
-                                   lr=0.00000005, loss_weights=[100000., 0., 1.],
+                                   lr=0.00000005, loss_weights=[10., 0., 1.],
                                    epochs=200, batch_size=self.batch_size)
                 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
@@ -107,7 +113,7 @@ class Trainer:
                 
 
                 ##########  update action_map parameters #############################                    
-                '''
+                
                 v_LDS_loss = self._get_v_LDS_loss()
                 
                 EztT_minus_Ezt_1TAT_bT_alltimes_QinvH = self._compute_EztT_minus_Ezt_1TAT_bT_alltimes_QinvH()
@@ -122,7 +128,7 @@ class Trainer:
                 self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
                 
                 self.hist_loss['v_LDS_loss'].append(h_l[0])
-                '''
+                
                 
                 ############ update DLS parameters
                 
