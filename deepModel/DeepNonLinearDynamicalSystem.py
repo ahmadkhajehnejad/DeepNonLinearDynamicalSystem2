@@ -50,3 +50,7 @@ class DeepNonLinearDynamicalSystem:
         v = self.action_encoder.predict(u)
         w_est = self.kalmannModel.predict(w,v)
         return self.observation_decoder.predict(w_est)
+    
+    def load_weights(self, dir_):
+        self.observation_autoencoder.load_weights(dir_ + 'observation_autoencoder_params.h5')
+        self.action_encoder.load_weights(dir_ + 'action_encoder_params.h5')

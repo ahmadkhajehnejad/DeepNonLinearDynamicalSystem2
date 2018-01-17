@@ -25,7 +25,7 @@ class Trainer:
         return self.deepNonLinearDynamicalSystem.x_dim * keras.losses.mean_squared_error(x_true, x_bar) #keras.metrics.binary_crossentropy(x_true, x_bar)# might be better to be changed to binary_cross_entropy
     
     def _unit_norm_loss(self, fake_arg, x_bar):
-        return 1600 * K.square(tf.norm(x_bar, axis=1) - 1)
+        return K.square(tf.norm(x_bar, axis=1) - 1)
         #return -K.log(tf.norm(x_bar, axis=1))
         #return -K.log(1 - K.square(2*(K.sigmoid(K.constant(np.array([10*(tf.norm(x_bar, axis=1)-1)]))) - 0.5)))
 
@@ -91,7 +91,7 @@ class Trainer:
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train,EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
-                                   lr=0.00000005, loss_weights=[10., 0., 1.],
+                                   lr=0.00000005, loss_weights=[10., 1., 1.],
                                    epochs=200, batch_size=self.batch_size)
                 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
@@ -142,7 +142,7 @@ class Trainer:
                 #print('loglik_w : ' + str(self.hist_loglik_w))
                 print()
                 print('reoncs,  union,  LDS =')
-                print([self.hist_loss['observation_recons_loss'][-1][-1], np.exp(-self.hist_loss['w_unit_norm_loss'][-1][-1]), self.hist_loss['w_LDS_loss'][-1][-1]])
+                print([self.hist_loss['observation_recons_loss'][-1][-1], self.hist_loss['w_unit_norm_loss'][-1][-1], self.hist_loss['w_LDS_loss'][-1][-1]])
                 print()
 
                 self.logger.save_hist()
@@ -200,4 +200,4 @@ class Trainer:
             sh = K.shape(v)
             return -tf.matmul(tf.reshape(EztT_minus_Ezt_1TAT_bT_alltimes_QinvH, [sh[0],1,sh[1]]), tf.reshape(v,[sh[0],sh[1],1]))\
             + 0.5 * tf.matmul(tf.reshape(tf.matmul(v, HTQinvH_tf),[sh[0],1,sh[1]]), tf.reshape(v,[sh[0],sh[1],1]))
-        return v_LDS_loss
+        return v_LDS_loss        

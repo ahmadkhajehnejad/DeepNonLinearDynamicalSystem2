@@ -16,7 +16,17 @@ u_all_validation = ( a.reshpe([a.shape[0],-1]) for a in u_all_validation[:-1] )
 
 deepNonLinearDynamicalSystem = DeepNonLinearDynamicalSystem()
 deepNonLinearDynamicalSystem.train(x_all_train, u_all_train)
+'''
+#---
+dir_ = './log/adam/7/4/'
+deepNonLinearDynamicalSystem.load_weights(dir_)
 
+hist_observation_recons_loss = pickle.load(open(dir_ + 'hist_observation_recons_loss.pkl','rb'))
+hist_observation_recons_loss = np.concatenate(hist_observation_recons_loss)
+
+hist_EM_obj = pickle.load(open(dir_ + 'hist_EM_obj.pkl', 'rb'))
+#---
+'''
 
 
 [x_all_test, u_all_test, states_test] = pickle.load(open('data/moving_particle_trajectory_test.data', 'rb'))
@@ -27,6 +37,6 @@ x_all_est = [None] * len(x_all_test)
 for i in range(len(x_all_test)):
     print(i)
     x_all_est[i] = np.zeros(x_all_test[i].shape)
-    x_all_est[i][:1] = x_all_test[i][:1]
+    x_all_est[i][:2] = x_all_test[i][:2]
     for j in range(2,x_all_test[i].shape[0]):
         x_all_est[i][j] = deepNonLinearDynamicalSystem.predict(x_all_test[i][:j-1], u_all_test[i][:j-1])
