@@ -23,10 +23,10 @@ class DeepNonLinearDynamicalSystem:
         h_decoded = decoder_h(w)
         x_bar = decoder_mean(h_decoded)
         
-        #decoder_input = Input(shape=(self.w_dim,))
-        #_h_decoded = decoder_h(decoder_input)
-        #_x_decoded_mean = decoder_mean(_h_decoded)
-        #dec = Model(decoder_input, _x_decoded_mean)
+        observation_decoder_input = Input(shape=(self.w_dim,))
+        _h_decoded = decoder_h(observation_decoder_input)
+        _x_decoded_mean = decoder_mean(_h_decoded)
+        self.observation_decoder = Model(observation_decoder_input, _x_decoded_mean)
         
         self.observation_autoencoder = Model(x,[x_bar,w,w])
         #self.observation_autoencoder = Model(x,x_bar)
@@ -45,3 +45,8 @@ class DeepNonLinearDynamicalSystem:
     def train(self, x_all_train, u_all_train): 
         self.trainer.train(x_all_train, u_all_train)
     
+    def predict(self, x, u):
+        w = self.observation_encoder.predict(x)
+        v = self.action_encoder.predict(u)
+        w_est = self.kalmannModel.predict(w,v)
+        return self.observation_decoder.predict(w_est)
