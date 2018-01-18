@@ -17,18 +17,16 @@ class Trainer:
         self.w_all, self.v_all = None, None
         self.logger = Logger(self)
         
-        self.hist_loss = {'observation_recons_loss':[], 'w_unit_norm_loss':[], 'w_LDS_loss':[], 'v_LDS_loss':[]}
+        self.hist_loss = {'observation_recons_loss':[], 'w_regularization_loss':[], 'w_LDS_loss':[], 'v_LDS_loss':[]}
         self.hist_loglik_w = []
         self.hist_EM_obj = []
 
     def _recons_loss(self, x_true, x_bar):
         return self.deepNonLinearDynamicalSystem.x_dim * keras.losses.mean_squared_error(x_true, x_bar) #keras.metrics.binary_crossentropy(x_true, x_bar)# might be better to be changed to binary_cross_entropy
     
-    def _unit_norm_loss(self, fake_arg, x_bar):
-        return K.square(tf.norm(x_bar, axis=1) - 1)
-        #return -K.log(tf.norm(x_bar, axis=1))
-        #return -K.log(1 - K.square(2*(K.sigmoid(K.constant(np.array([10*(tf.norm(x_bar, axis=1)-1)]))) - 0.5)))
-
+    #def _w_regularization_loss(self, x, w):
+    #    pass
+    
     '''
     def train_network(self, model, net_in, net_out, losses, lr, loss_weights, epochs, batch_size):
         model.compile(optimizer=optimizers.Adam(lr=lr,beta_1=0.1), loss=losses, loss_weights=loss_weights)
@@ -84,13 +82,13 @@ class Trainer:
                 '''
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train,EzT_CT_Rinv_plus_dT_Rinv],\
-                                   losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
+                                   losses = [self._recons_loss, self._w_regularization_loss, w_LDS_loss],\
                                    lr=0.00005, loss_weights=[1., 0., .1],
                                    epochs=200, batch_size=self.batch_size)
                 '''
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train,EzT_CT_Rinv_plus_dT_Rinv],\
-                                   losses = [self._recons_loss, self._unit_norm_loss, w_LDS_loss],\
+                                   losses = [self._recons_loss, self._w_regularization_loss, w_LDS_loss],\
                                    lr=0.00000005, loss_weights=[10., 1., 1.],
                                    epochs=200, batch_size=self.batch_size)
                 
@@ -99,7 +97,7 @@ class Trainer:
                 self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
                 
                 self.hist_loss['observation_recons_loss'].append(h_l[1])
-                self.hist_loss['w_unit_norm_loss'].append(h_l[2])
+                self.hist_loss['w_regularization_loss'].append(h_l[2])
                 self.hist_loss['w_LDS_loss'].append(h_l[3])
 
                 current_w_LDS_loss = np.sum(K.eval(w_LDS_loss(K.constant(EzT_CT_Rinv_plus_dT_Rinv, dtype='float32'), K.constant(np.concatenate(self.w_all), dtype='float32'))))
@@ -141,8 +139,8 @@ class Trainer:
                 print('EM_objective : ' + str(self.hist_EM_obj))
                 #print('loglik_w : ' + str(self.hist_loglik_w))
                 print()
-                print('reoncs,  union,  LDS =')
-                print([self.hist_loss['observation_recons_loss'][-1][-1], self.hist_loss['w_unit_norm_loss'][-1][-1], self.hist_loss['w_LDS_loss'][-1][-1]])
+                print('reoncs, regul,  LDS =')
+                print([self.hist_loss['observation_recons_loss'][-1][-1], self.hist_loss['w_regularization_loss'][-1][-1], self.hist_loss['w_LDS_loss'][-1][-1]])
                 print()
 
                 self.logger.save_hist()
@@ -200,4 +198,28 @@ class Trainer:
             sh = K.shape(v)
             return -tf.matmul(tf.reshape(EztT_minus_Ezt_1TAT_bT_alltimes_QinvH, [sh[0],1,sh[1]]), tf.reshape(v,[sh[0],sh[1],1]))\
             + 0.5 * tf.matmul(tf.reshape(tf.matmul(v, HTQinvH_tf),[sh[0],1,sh[1]]), tf.reshape(v,[sh[0],sh[1],1]))
-        return v_LDS_loss        
+        return v_LDS_loss
+    
+
+class UnitNormTrainer(Trainer):
+    def _unit_norm_loss(self, fake_arg, x_bar):
+        return K.square(tf.norm(x_bar, axis=1) - 1)
+        #return -K.log(tf.norm(x_bar, axis=1))
+        #return -K.log(1 - K.square(2*(K.sigmoid(K.constant(np.array([10*(tf.norm(x_bar, axis=1)-1)]))) - 0.5)))
+
+    def _w_regularization_loss(self, x, w):
+        return self._unit_norm_loss(x, w)
+
+
+class LaplacianTrainer(Trainer):
+
+    def _sqr_diff(self,X):
+        tmp = K.tile(K.reshape(K.sum(K.square(X), axis=1), [-1,1]), [1,K.shape(X)[0]])
+        return tmp + K.transpose(tmp) - 2*tf.matmul(X, tf.transpose(X))
+    
+    def _Laplacian_loss(self,x_true,w):
+        kernel_sigma_2 = 1600
+        return K.mean(K.exp(-self._sqr_diff(x_true)/kernel_sigma_2) * self._sqr_diff(w), axis=-1) / K.mean(K.sum(K.square(w),axis=1))
+    
+    def _w_regularization_loss(self, x, w):
+        return self._Laplacian_loss(x,w)

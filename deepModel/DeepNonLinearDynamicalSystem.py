@@ -35,7 +35,8 @@ class DeepNonLinearDynamicalSystem:
         self.action_encoder.add(Dense(4, input_shape=(self.u_dim,), activation='relu'))
         self.action_encoder.add(Dense(self.v_dim, activation=None))
         
-        self.trainer = Trainer(self)
+        #self.trainer = UnitNormTrainer(self)
+        self.trainer = LaplacianTrainer(self)
         
     def encode(self, x_all, u_all):
         w_all = [self.observation_encoder.predict(a) for a in x_all]
@@ -49,7 +50,7 @@ class DeepNonLinearDynamicalSystem:
         w = self.observation_encoder.predict(x)
         v = self.action_encoder.predict(u)
         w_est = self.kalmannModel.predict(w,v)
-        return self.observation_decoder.predict(w_est)
+        return [self.observation_decoder.predict(w_est), w_est]
     
     def load_weights(self, dir_):
         self.observation_autoencoder.load_weights(dir_ + 'observation_autoencoder_params.h5')

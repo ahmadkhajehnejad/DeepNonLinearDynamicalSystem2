@@ -140,7 +140,8 @@ class KalmannModel:
     
         ############################ H
         
-        self.H = np.ones([z_dim, v_dim]) / v_dim
+        #self.H = np.ones([z_dim, v_dim]) / v_dim
+        self.H = np.eye(z_dim)
         
         ############################ A
         

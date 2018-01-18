@@ -24,7 +24,7 @@ class Logger:
         pickle.dump(self.trainer.hist_EM_obj, open(log_dir + 'hist_EM_obj.pkl', 'wb'))
         pickle.dump(self.trainer.hist_loglik_w, open(log_dir + 'hist_loglik_w.pkl', 'wb'))
         pickle.dump(self.trainer.hist_loss['observation_recons_loss'], open(log_dir + 'hist_observation_recons_loss.pkl', 'wb'))
-        pickle.dump(self.trainer.hist_loss['w_unit_norm_loss'], open(log_dir + 'hist_w_unit_norm_loss.pkl', 'wb'))
+        pickle.dump(self.trainer.hist_loss['w_regularization_loss'], open(log_dir + 'hist_w_regularization_loss.pkl', 'wb'))
         pickle.dump(self.trainer.hist_loss['w_LDS_loss'], open(log_dir + 'hist_w_LDS_loss.pkl', 'wb'))
         pickle.dump(self.trainer.hist_loss['v_LDS_loss'], open(log_dir + 'hist_v_LDS_loss.pkl', 'wb'))
         
