@@ -54,6 +54,6 @@ for i in range(len(x_all_test)):
     w_all_test[i] = deepNonLinearDynamicalSystem.observation_encoder.predict(x_all_test[i])
 
 
-f, axarr = plt.subplots(2, sharex=True)
+f, axarr = plt.subplots(2,1)
 axarr[0].imshow(x_all_est[0][100].reshape([40,40]))
 axarr[1].imshow(x_all_test[0][100].reshape([40,40]))
