@@ -22,7 +22,8 @@ class Trainer:
         self.hist_EM_obj = []
 
     def _recons_loss(self, x_true, x_bar):
-        return self.deepNonLinearDynamicalSystem.x_dim * keras.losses.mean_squared_error(x_true, x_bar) #keras.metrics.binary_crossentropy(x_true, x_bar)# might be better to be changed to binary_cross_entropy
+        return self.deepNonLinearDynamicalSystem.x_dim * keras.losses.mean_squared_error(x_true, x_bar)
+        #return self.deepNonLinearDynamicalSystem.x_dim * keras.losses.mean_squared_error(x_true, x_bar) #keras.metrics.binary_crossentropy(x_true, x_bar)# might be better to be changed to binary_cross_entropy
     
     #def _w_regularization_loss(self, x, w):
     #    pass

@@ -18,22 +18,26 @@ u_all_validation = ( a.reshpe([a.shape[0],-1]) for a in u_all_validation[:-1] )
 deepNonLinearDynamicalSystem = DeepNonLinearDynamicalSystem()
 deepNonLinearDynamicalSystem.train(x_all_train, u_all_train)
 
+'''
 #---
-dir_ = './log/adam/9/4/'
+dir_ = './log/adam/6/2/'
 deepNonLinearDynamicalSystem.load_weights(dir_)
 
-hist_observation_recons_loss = pickle.load(open(dir_ + 'hist_observation_recons_loss.pkl','rb'))
-hist_observation_recons_loss = np.concatenate(hist_observation_recons_loss)
+tmp = pickle.load(open(dir_ + 'hist_observation_recons_loss.pkl','rb'))
+hist_observation_recons_loss = np.zeros([len(tmp)])
+for i in range(len(tmp)):
+    hist_observation_recons_loss[i] = tmp[i][-1]
 
 hist_EM_obj = pickle.load(open(dir_ + 'hist_EM_obj.pkl', 'rb'))
 
-hist_w_regularization_loss = pickle.load(open(dir_ + 'hist_w_regularization_loss.pkl','rb'))
-hist_w_regularization_loss = np.concatenate(hist_w_regularization_loss)
+tmp = pickle.load(open(dir_ + 'hist_w_regularization_loss.pkl','rb'))
+hist_w_regularization_loss = np.zeros([len(tmp)])
+for i in range(len(tmp)):
+    hist_w_regularization_loss[i] = tmp[i][-1]
 
 [A,b,H,C,d,Q,R,mu_0,Sig_0] = pickle.load(open(dir_ + 'LDS_params.pkl','rb'))
 #---
-
-
+'''
 
 [x_all_test, u_all_test, states_test] = pickle.load(open('data/moving_particle_trajectory_test.data', 'rb'))
 x_all_test = [ a.reshape([a.shape[0],-1]) for a in x_all_test ]
@@ -53,7 +57,20 @@ for i in range(len(x_all_test)):
         deepNonLinearDynamicalSystem.predict(x_all_test[i][:j], u_all_test[i][:j])
     w_all_test[i] = deepNonLinearDynamicalSystem.observation_encoder.predict(x_all_test[i])
 
-
 f, axarr = plt.subplots(2,1)
-axarr[0].imshow(x_all_est[0][100].reshape([40,40]))
-axarr[1].imshow(x_all_test[0][100].reshape([40,40]))
+for i in range(1,2):
+    for j in range(x_all_test[i].shape[0]):
+        axarr[0].imshow(x_all_est[i][j].reshape([40,40]))
+        axarr[1].imshow(x_all_test[i][j].reshape([40,40]))
+        if j < 10:
+            filename = '00' + str(j)
+        elif j < 100:
+            filename = '0' + str(j)
+        else:
+            filename = str(j)
+        f.savefig('./out/' + str(i) + '/' + filename + '.jpg')
+        
+
+print(np.mean(np.linalg.norm(w_all_est[0] - w_all_test[0], axis=1)))
+print(np.mean(np.linalg.norm(w_all_test[0], axis=1)))
+print(np.mean(np.linalg.norm(w_all_test[0][1:] - w_all_test[0][:-1], axis=1)))

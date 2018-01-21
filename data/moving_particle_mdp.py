@@ -3,20 +3,27 @@ from PIL import Image, ImageDraw
 
 
 class MovingParticleMDP(object):
-    def __init__(self, H=100, W=100):
+    def __init__(self, H=40, W=40):
         super(MovingParticleMDP, self).__init__()
         self.H, self.W = H, W
 
-        self.agent_size = 6
+        self.agent_size = 10
         self.action_dim = 2
-        self.v_min = np.array([-20,-20])
-        self.v_max = np.array([20,20])
-        self.arange_min = np.array([-10, -10])
-        self.arange_max = np.array([10, 10])
+        self.v_min = np.array([-5.,-5.])
+        self.v_max = np.array([5.,5.])
+        self.arange_min = np.array([-1., -1.])
+        self.arange_max = np.array([1., 1.])
+        '''
         self.anoiserange_min = np.array([-1,-1])
         self.anoiserange_max = np.array([1,1])
         self.onoiserange_min = np.array([-1,-1])
         self.onoiserange_max = np.array([1,1])
+        '''
+        self.anoiserange_min = np.array([0,0])
+        self.anoiserange_max = np.array([0,0])
+        self.onoiserange_min = np.array([0,0])
+        self.onoiserange_max = np.array([0,0])
+
 
 #        self.obstacles = np.array([[2, 1], [1, 2], [2, 3], [2, 1.5], [3, 2], [2, 2.5]])
 #        self.obstacles[:, 0] = (self.obstacles[:, 0] - 2.5) * 10 + 25
