@@ -45,7 +45,7 @@ class Trainer:
         return list(h)         
 
 
-    def train(self, x_all_train, u_all_train):#, x_all_validation, u_all_validation):
+    def train(self, x_all_train, u_all_train, iter_EM_start = 0):#, x_all_validation, u_all_validation):
         
         x_train = np.concatenate(x_all_train)
         u_train = np.concatenate(u_all_train)
@@ -57,7 +57,7 @@ class Trainer:
         self.deepNonLinearDynamicalSystem.kalmannModel.maximization(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all)
         
         
-        for self.iter_EM in range(0,self.IterNum_EM):
+        for self.iter_EM in range(iter_EM_start,self.IterNum_EM):
             
             [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)            
             [self.Ezt, self.EztztT, self.Ezt_1ztT] = self.deepNonLinearDynamicalSystem.kalmannModel.expectation(self.w_all,self.v_all)
@@ -87,10 +87,11 @@ class Trainer:
                                    lr=0.00005, loss_weights=[1., 0., .1],
                                    epochs=200, batch_size=self.batch_size)
                 '''
+                
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train,EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._w_regularization_loss, w_LDS_loss],\
-                                   lr=0.00000005, loss_weights=[10., 1., 1.],
+                                   lr=None, loss_weights=[1.,10.,1.],
                                    epochs=200, batch_size=self.batch_size)
                 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
@@ -140,7 +141,7 @@ class Trainer:
                 print('EM_objective : ' + str(self.hist_EM_obj))
                 #print('loglik_w : ' + str(self.hist_loglik_w))
                 print()
-                print('reoncs, regul,  LDS =')
+                print('recons, regul,  LDS =')
                 print([self.hist_loss['observation_recons_loss'][-1][-1], self.hist_loss['w_regularization_loss'][-1][-1], self.hist_loss['w_LDS_loss'][-1][-1]])
                 print()
 

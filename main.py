@@ -16,11 +16,13 @@ u_all_validation = ( a.reshpe([a.shape[0],-1]) for a in u_all_validation[:-1] )
 #####
 
 deepNonLinearDynamicalSystem = DeepNonLinearDynamicalSystem()
+#deepNonLinearDynamicalSystem.load_weights('./log/adam/3/4/')
+#deepNonLinearDynamicalSystem.train(x_all_train, u_all_train, 4)
 deepNonLinearDynamicalSystem.train(x_all_train, u_all_train)
 
 '''
 #---
-dir_ = './log/adam/6/2/'
+dir_ = './log/adam/1/4/'
 deepNonLinearDynamicalSystem.load_weights(dir_)
 
 tmp = pickle.load(open(dir_ + 'hist_observation_recons_loss.pkl','rb'))
@@ -57,8 +59,9 @@ for i in range(len(x_all_test)):
         deepNonLinearDynamicalSystem.predict(x_all_test[i][:j], u_all_test[i][:j])
     w_all_test[i] = deepNonLinearDynamicalSystem.observation_encoder.predict(x_all_test[i])
 
+'''
 f, axarr = plt.subplots(2,1)
-for i in range(1,2):
+for i in range(1,2:
     for j in range(x_all_test[i].shape[0]):
         axarr[0].imshow(x_all_est[i][j].reshape([40,40]))
         axarr[1].imshow(x_all_test[i][j].reshape([40,40]))
@@ -69,7 +72,7 @@ for i in range(1,2):
         else:
             filename = str(j)
         f.savefig('./out/' + str(i) + '/' + filename + '.jpg')
-        
+'''     
 
 print(np.mean(np.linalg.norm(w_all_est[0] - w_all_test[0], axis=1)))
 print(np.mean(np.linalg.norm(w_all_test[0], axis=1)))

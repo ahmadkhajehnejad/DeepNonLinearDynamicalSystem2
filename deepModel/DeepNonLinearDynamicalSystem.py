@@ -9,32 +9,6 @@ from deepModel.Trainer import *
 class DeepNonLinearDynamicalSystem:
     def __init__(self):
         
-        '''
-        x = Input(shape=(self.x_dim,))
-        h_1 = Conv2D(40, [3,3], strides=(2, 2), activation='relu')(x)
-        h_2 = Conv2D(40, [3,3], strides=(2, 2), activation='relu')(h_1)
-        h = Dense(self.intermediate_dim, activation='relu')(x)
-        w = Dense(self.w_dim, activation=None)(h)
-        
-        self.observation_encoder = Model([x],[w])
-        
-        decoder_h = Dense(self.intermediate_dim, activation='relu')
-        decoder_mean = Dense(self.x_dim, activation='sigmoid')
-        h_decoded = decoder_h(w)
-        x_bar = decoder_mean(h_decoded)
-        
-        observation_decoder_input = Input(shape=(self.w_dim,))
-        _h_decoded = decoder_h(observation_decoder_input)
-        _x_decoded_mean = decoder_mean(_h_decoded)
-        self.observation_decoder = Model(observation_decoder_input, _x_decoded_mean)
-        
-        self.observation_autoencoder = Model(x,[x_bar,w,w])
-        #self.observation_autoencoder = Model(x,x_bar)
-        
-        self.action_encoder = Sequential()
-        self.action_encoder.add(Dense(4, input_shape=(self.u_dim,), activation='relu'))
-        self.action_encoder.add(Dense(self.v_dim, activation=None))
-        '''
         
         self.w_dim, self.z_dim, self.v_dim, self.x_dim, self.u_dim = 10, 4, 4, 40*40, 2
         self.intermediate_dim = 500
@@ -71,8 +45,8 @@ class DeepNonLinearDynamicalSystem:
         v_all = [self.action_encoder.predict(a) for a in u_all]
         return [w_all, v_all]
                 
-    def train(self, x_all_train, u_all_train): 
-        self.trainer.train(x_all_train, u_all_train)
+    def train(self, x_all_train, u_all_train, iter_EM_start=0): 
+        self.trainer.train(x_all_train, u_all_train, iter_EM_start)
     
     def predict(self, x, u):
         w = self.observation_encoder.predict(x)
