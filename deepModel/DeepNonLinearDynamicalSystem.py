@@ -10,7 +10,7 @@ class DeepNonLinearDynamicalSystem:
     def __init__(self):
         
         
-        self.w_dim, self.z_dim, self.v_dim, self.x_dim, self.u_dim = 10, 4, 4, 40*40, 2
+        self.w_dim, self.z_dim, self.v_dim, self.x_dim, self.u_dim = 10, 4, 4, 32*32, 2
         self.intermediate_dim = 500
         self.kalmannModel = KalmannModel(self.z_dim, self.w_dim, self.v_dim)
         

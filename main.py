@@ -3,9 +3,20 @@ import numpy as np
 from deepModel.DeepNonLinearDynamicalSystem import *
 import matplotlib.pyplot as plt
 
+
+npzfile = np.load('./data/box.npz')
+images = npzfile['images'].astype(np.float32)
+images = (images > 0).astype('float32')
+T = images.shape[1]
+x_all_train = [images[i].reshape([T,-1]) for i in range(images.shape[0])]
+u_dim = 2 ############
+u_all_train = [np.zeros([T-1,u_dim])] * images.shape[0]
+
+'''
 [x_all_train, u_all_train, states_train] = pickle.load(open('data/moving_particle_trajectory_train.data', 'rb'))
 x_all_train = [ a.reshape([a.shape[0],-1]) for a in x_all_train ]
 u_all_train = [ a[:-1].reshape([a.shape[0]-1,-1]) for a in u_all_train ]
+'''
 
 #####
 '''
@@ -41,9 +52,23 @@ for i in range(len(tmp)):
 #---
 '''
 
+'''
 [x_all_test, u_all_test, states_test] = pickle.load(open('data/moving_particle_trajectory_test.data', 'rb'))
 x_all_test = [ a.reshape([a.shape[0],-1]) for a in x_all_test ]
 u_all_test = [ a[:-1].reshape([a.shape[0]-1,-1]) for a in u_all_test ]
+'''
+
+
+npzfile = np.load('./data/box_test.npz')
+images = npzfile['images'].astype(np.float32)
+images = (images > 0).astype('float32')
+T = images.shape[1]
+x_all_test = [images[i].reshape([T,-1]) for i in range(images.shape[0])]
+u_dim = 2 ############
+u_all_test = [np.zeros([T-1,u_dim])] * images.shape[0]
+
+
+
 
 x_all_est = [None] * len(x_all_test)
 w_all_est = [None] * len(x_all_test)
