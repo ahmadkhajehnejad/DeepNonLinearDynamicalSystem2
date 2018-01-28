@@ -113,7 +113,7 @@ class Trainer:
                 
 
                 ##########  update action_map parameters #############################                    
-                
+                '''
                 v_LDS_loss = self._get_v_LDS_loss()
                 
                 EztT_minus_Ezt_1TAT_bT_alltimes_QinvH = self._compute_EztT_minus_Ezt_1TAT_bT_alltimes_QinvH()
@@ -128,7 +128,7 @@ class Trainer:
                 self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
                 
                 self.hist_loss['v_LDS_loss'].append(h_l[0])
-                
+                '''
                 
                 ############ update DLS parameters
                 

@@ -11,6 +11,7 @@ T = images.shape[1]
 x_all_train = [images[i].reshape([T,-1]) for i in range(images.shape[0])]
 u_dim = 2 ############
 u_all_train = [np.zeros([T-1,u_dim])] * images.shape[0]
+images=[]
 
 '''
 [x_all_train, u_all_train, states_train] = pickle.load(open('data/moving_particle_trajectory_train.data', 'rb'))
@@ -66,7 +67,7 @@ T = images.shape[1]
 x_all_test = [images[i].reshape([T,-1]) for i in range(images.shape[0])]
 u_dim = 2 ############
 u_all_test = [np.zeros([T-1,u_dim])] * images.shape[0]
-
+images=[]
 
 
 
