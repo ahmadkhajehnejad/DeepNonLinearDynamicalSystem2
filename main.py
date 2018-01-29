@@ -31,10 +31,11 @@ deepNonLinearDynamicalSystem = DeepNonLinearDynamicalSystem()
 #deepNonLinearDynamicalSystem.load_weights('./log/adam/3/4/')
 #deepNonLinearDynamicalSystem.train(x_all_train, u_all_train, 4)
 deepNonLinearDynamicalSystem.train(x_all_train, u_all_train)
+#deepNonLinearDynamicalSystem.trainer.complementary_train(x_all_train, u_all_train)
 
 '''
 #---
-dir_ = './log/adam/1/4/'
+dir_ = './log/box_complementary_run_3/12/0/'
 deepNonLinearDynamicalSystem.load_weights(dir_)
 
 tmp = pickle.load(open(dir_ + 'hist_observation_recons_loss.pkl','rb'))
@@ -85,12 +86,12 @@ for i in range(len(x_all_test)):
         deepNonLinearDynamicalSystem.predict(x_all_test[i][:j], u_all_test[i][:j])
     w_all_test[i] = deepNonLinearDynamicalSystem.observation_encoder.predict(x_all_test[i])
 
-'''
+
 f, axarr = plt.subplots(2,1)
-for i in range(1,2:
+for i in range(0,1):
     for j in range(x_all_test[i].shape[0]):
-        axarr[0].imshow(x_all_est[i][j].reshape([40,40]))
-        axarr[1].imshow(x_all_test[i][j].reshape([40,40]))
+        axarr[0].imshow(x_all_est[i][j].reshape([32,32]))
+        axarr[1].imshow(x_all_test[i][j].reshape([32,32]))
         if j < 10:
             filename = '00' + str(j)
         elif j < 100:
@@ -98,8 +99,19 @@ for i in range(1,2:
         else:
             filename = str(j)
         f.savefig('./out/' + str(i) + '/' + filename + '.jpg')
-'''     
+     
 
 print(np.mean(np.linalg.norm(w_all_est[0] - w_all_test[0], axis=1)))
 print(np.mean(np.linalg.norm(w_all_test[0], axis=1)))
 print(np.mean(np.linalg.norm(w_all_test[0][1:] - w_all_test[0][:-1], axis=1)))
+
+
+########################
+'''
+f, arr = plt.subplots(11,1)
+delta = w_all_test[0][19] - w_all_test[0][10]
+for i in range(11):
+    arr[i].imshow(deepNonLinearDynamicalSystem.observation_decoder.predict((w_all_test[0][10] + i*delta/10).reshape([1,-1])).reshape([32,32]))
+'''
+
+########################

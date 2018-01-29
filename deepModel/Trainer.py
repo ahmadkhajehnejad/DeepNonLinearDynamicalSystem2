@@ -10,8 +10,8 @@ from deepModel.Logger import *
 class Trainer:
     def __init__(self, deepNonLineerDynamicalSystem):
         self.deepNonLinearDynamicalSystem = deepNonLineerDynamicalSystem
-        self.IterNum_EM = 10
-        self.IterNum_CoordAsc = 5
+        self.IterNum_EM = 5
+        self.IterNum_CoordAsc = 3
         self.batch_size = 1000
         self.Ezt, self.EztztT, self.Ezt_1ztT = None, None, None
         self.w_all, self.v_all = None, None
@@ -91,7 +91,7 @@ class Trainer:
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train,EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._w_regularization_loss, w_LDS_loss],\
-                                   lr=None, loss_weights=[1.,10.,1.],
+                                   lr=None, loss_weights=[100.,10.,1.],
                                    epochs=200, batch_size=self.batch_size)
                 
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
@@ -220,8 +220,32 @@ class LaplacianTrainer(Trainer):
         return tmp + K.transpose(tmp) - 2*tf.matmul(X, tf.transpose(X))
     
     def _Laplacian_loss(self,x_true,w):
-        kernel_sigma_2 = 1600
+        kernel_sigma_2 = self.deepNonLinearDynamicalSystem.x_dim
         return K.mean(K.exp(-self._sqr_diff(x_true)/kernel_sigma_2) * self._sqr_diff(w), axis=-1) / K.mean(K.sum(K.square(w),axis=1))
     
     def _w_regularization_loss(self, x, w):
         return self._Laplacian_loss(x,w)
+
+    def complementary_train(self, x_all_train, u_all_train, iter_EM_start = 0):#, x_all_validation, u_all_validation):
+         
+        [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
+        [self.Ezt, self.EztztT, self.Ezt_1ztT] = self.deepNonLinearDynamicalSystem.kalmannModel.expectation(self.w_all,self.v_all)
+        self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
+        #self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
+        print('EM_objective : ' + str(self.hist_EM_obj))
+        print()
+        
+        self.iter_CoorAsc = 0
+        
+        for self.iter_EM in range(iter_EM_start,self.IterNum_EM + 20):
+            
+            [self.Ezt, self.EztztT, self.Ezt_1ztT] = self.deepNonLinearDynamicalSystem.kalmannModel.expectation(self.w_all,self.v_all)
+            self.deepNonLinearDynamicalSystem.kalmannModel.maximization(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all)
+            self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
+            #self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
+            print('EM_objective : ' + str(self.hist_EM_obj))
+            print()
+            self.logger.save_hist()
+            self.logger.save_params()
+                
+                

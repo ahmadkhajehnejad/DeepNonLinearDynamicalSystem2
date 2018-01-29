@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 from keras.models import Model , Sequential
 from keras.layers import Dense, Input, Reshape, Lambda, Concatenate, Conv2D
 from keras import backend as K
@@ -57,3 +58,5 @@ class DeepNonLinearDynamicalSystem:
     def load_weights(self, dir_):
         self.observation_autoencoder.load_weights(dir_ + 'observation_autoencoder_params.h5')
         self.action_encoder.load_weights(dir_ + 'action_encoder_params.h5')
+        [A,b,H,C,d,Q,R,mu_0,Sig_0] = pickle.load(open(dir_ + 'LDS_params.pkl','rb'))
+        self.kalmannModel.setParams(A, b, H, C, d, Q, R, mu_0, Sig_0)
