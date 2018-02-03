@@ -48,7 +48,7 @@ deepNonLinearDynamicalSystem.train(x_all_train, u_all_train, locations_all_train
 
 '''
 #---
-dir_ = './log/box_complementary_run_3/12/0/'
+dir_ = './log/2018.2.2.20.4.20/1/2/'
 deepNonLinearDynamicalSystem.load_weights(dir_)
 
 tmp = pickle.load(open(dir_ + 'hist_observation_recons_loss.pkl','rb'))

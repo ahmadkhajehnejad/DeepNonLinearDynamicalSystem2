@@ -38,10 +38,16 @@ class Trainer:
      '''
     
     def train_network(self, model, net_in, net_out, losses, lr, loss_weights, epochs, batch_size):
-        model.compile(optimizer='adam', loss=losses, loss_weights=loss_weights)
-        h = model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0,\
-                      callbacks=[keras.callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=20, \
-                                                              verbose=1, mode='min')]).history.values()
+        if lr == None:
+            model.compile(optimizer='adam', loss=losses, loss_weights=loss_weights)
+            h = model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0,\
+                          callbacks=[keras.callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=20, \
+                                                                  verbose=1, mode='min')]).history.values()
+        else:
+            model.compile(optimizer=optimizers.Adam(lr=lr,beta_1=0.1), loss=losses, loss_weights=loss_weights)
+            h = model.fit( net_in, net_out, shuffle=True, epochs=epochs, batch_size=batch_size, verbose=0,\
+                          callbacks=[keras.callbacks.EarlyStopping(monitor='loss', min_delta=0, patience=20, \
+                                                                  verbose=1, mode='min')]).history.values()
         return list(h)         
 
 
@@ -78,9 +84,9 @@ class Trainer:
                 
                 EzT_CT_Rinv_plus_dT_Rinv = self._compute_EzT_CT_Rinv_plus_dT_Rinv()
                 
-                print('-------')
-                current_w_LDS_loss = np.sum(K.eval(w_LDS_loss(K.constant(EzT_CT_Rinv_plus_dT_Rinv, dtype='float32'), K.constant(np.concatenate(self.w_all), dtype='float32'))))
-                print(float(-current_w_LDS_loss))
+                #print('-------')
+                #current_w_LDS_loss = np.sum(K.eval(w_LDS_loss(K.constant(EzT_CT_Rinv_plus_dT_Rinv, dtype='float32'), K.constant(np.concatenate(self.w_all), dtype='float32'))))
+                #print(float(-current_w_LDS_loss))
                 '''
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, x_train,EzT_CT_Rinv_plus_dT_Rinv],\
@@ -93,9 +99,9 @@ class Trainer:
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, locations_train,EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._w_regularization_loss, w_LDS_loss],\
-                                   lr=None, loss_weights=[10.,10.,1.],
+                                   lr=0.001 * (0.5)**self.iter_EM, loss_weights=[10.,10.,1.],
                                    epochs=200, batch_size=self.batch_size)
-                print('0000000')
+                #print('0000000')
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)
                 self.hist_EM_obj.append(self.deepNonLinearDynamicalSystem.kalmannModel.E_log_P_w_and_z(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all, self.v_all))
                 #self.hist_loglik_w.append(self.deepNonLinearDynamicalSystem.kalmannModel.log_likelihood(self.w_all, self.v_all))
@@ -104,13 +110,13 @@ class Trainer:
                 self.hist_loss['w_regularization_loss'].append(h_l[2])
                 self.hist_loss['w_LDS_loss'].append(h_l[3])
 
-                current_w_LDS_loss = np.sum(K.eval(w_LDS_loss(K.constant(EzT_CT_Rinv_plus_dT_Rinv, dtype='float32'), K.constant(np.concatenate(self.w_all), dtype='float32'))))
-                print(float(-current_w_LDS_loss))
-                k_current_w_LDS_loss = self.deepNonLinearDynamicalSystem.kalmannModel.get_w_LDS_loss(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all)
-                print(k_current_w_LDS_loss)
-                k_current_w_LDS_loss_2 = self.deepNonLinearDynamicalSystem.kalmannModel.get_w_LDS_loss_2(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all)
-                print(k_current_w_LDS_loss_2)
-                print('-------')
+                #current_w_LDS_loss = np.sum(K.eval(w_LDS_loss(K.constant(EzT_CT_Rinv_plus_dT_Rinv, dtype='float32'), K.constant(np.concatenate(self.w_all), dtype='float32'))))
+                #print(float(-current_w_LDS_loss))
+                #k_current_w_LDS_loss = self.deepNonLinearDynamicalSystem.kalmannModel.get_w_LDS_loss(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all)
+                #print(k_current_w_LDS_loss)
+                #k_current_w_LDS_loss_2 = self.deepNonLinearDynamicalSystem.kalmannModel.get_w_LDS_loss_2(self.Ezt, self.EztztT, self.Ezt_1ztT, self.w_all)
+                #print(k_current_w_LDS_loss_2)
+                #print('-------')
                 print()
                 
 
