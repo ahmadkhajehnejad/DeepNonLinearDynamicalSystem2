@@ -99,7 +99,7 @@ class Trainer:
                 h_l = self.train_network(self.deepNonLinearDynamicalSystem.observation_autoencoder,\
                                    net_in=x_train, net_out=[x_train, locations_train,EzT_CT_Rinv_plus_dT_Rinv],\
                                    losses = [self._recons_loss, self._w_regularization_loss, w_LDS_loss],\
-                                   lr=0.001 * (0.5)**self.iter_EM, loss_weights=[10.,10.,1.],
+                                   lr=0.001 * (0.5)**self.iter_EM, loss_weights=[100.,100.,1.],
                                    epochs=200, batch_size=self.batch_size)
                 #print('0000000')
                 [self.w_all, self.v_all] = self.deepNonLinearDynamicalSystem.encode(x_all_train, u_all_train)

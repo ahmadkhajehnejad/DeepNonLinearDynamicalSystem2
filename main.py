@@ -48,7 +48,7 @@ deepNonLinearDynamicalSystem.train(x_all_train, u_all_train, locations_all_train
 
 '''
 #---
-dir_ = './log/2018.2.2.20.4.20/1/2/'
+dir_ = './log/2018.2.2.22.46.58/1/2/'
 deepNonLinearDynamicalSystem.load_weights(dir_)
 
 tmp = pickle.load(open(dir_ + 'hist_observation_recons_loss.pkl','rb'))
@@ -89,7 +89,7 @@ x_all_est = [None] * len(x_all_test)
 w_all_est = [None] * len(x_all_test)
 w_all_test = [None] * len(x_all_test)
 for i in range(len(x_all_test)):
-    print(i)
+    #print(i)
     x_all_est[i] = np.zeros(x_all_test[i].shape)
     x_all_est[i][:2] = x_all_test[i][:2]
     w_all_est[i] = np.zeros([x_all_test[i].shape[0], deepNonLinearDynamicalSystem.w_dim])
