@@ -263,4 +263,4 @@ class CheatLaplacianTrainer(LaplacianTrainer):
     
     def _Laplacian_loss(self,loc_true,w):
         kernel_sigma_2 = 1
-        return K.mean(K.exp(-self._sqr_diff(loc_true)/kernel_sigma_2) * self._sqr_diff(w), axis=-1)
+        return K.mean(K.exp(-self._sqr_diff(loc_true)/kernel_sigma_2) * self._sqr_diff(w), axis=-1) / K.mean(K.sum(K.square(w),axis=1))
