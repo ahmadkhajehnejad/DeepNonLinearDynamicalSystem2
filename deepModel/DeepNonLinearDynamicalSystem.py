@@ -39,15 +39,15 @@ class DeepNonLinearDynamicalSystem:
         self.action_encoder.add(Dense(self.v_dim, activation=None))
         
         #self.trainer = UnitNormTrainer(self)
-        self.trainer = LaplacianTrainer(self)
+        self.trainer = CheatLaplacianTrainer(self)
         
     def encode(self, x_all, u_all):
         w_all = [self.observation_encoder.predict(a) for a in x_all]
         v_all = [self.action_encoder.predict(a) for a in u_all]
         return [w_all, v_all]
                 
-    def train(self, x_all_train, u_all_train, iter_EM_start=0): 
-        self.trainer.train(x_all_train, u_all_train, iter_EM_start)
+    def train(self, x_all_train, u_all_train, locations_all_train = None, iter_EM_start=0): 
+        self.trainer.train(x_all_train, u_all_train, locations_all_train, iter_EM_start)
     
     def predict(self, x, u):
         w = self.observation_encoder.predict(x)

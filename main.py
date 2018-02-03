@@ -12,6 +12,13 @@ x_all_train = [images[i].reshape([T,-1]) for i in range(images.shape[0])]
 u_dim = 2 ############
 u_all_train = [np.zeros([T-1,u_dim])] * images.shape[0]
 images=[]
+npzfile = []
+locations_all_train = [None]*len(x_all_train)
+for i in range(len(x_all_train)):
+    locations_all_train[i] = np.zeros([T,2], dtype=float)
+    for j in range(T):
+        [a,b] = np.where(x_all_train[i][j].reshape([32,32])[3:-2,3:-2] > 0)
+        locations_all_train[i][j,:] = np.array([a[0]+2,b[0]], dtype=float)/32
 
 '''
 [x_all_train, u_all_train, states_train] = pickle.load(open('data/moving_particle_trajectory_train.data', 'rb'))
@@ -29,8 +36,14 @@ u_all_validation = ( a.reshpe([a.shape[0],-1]) for a in u_all_validation[:-1] )
 
 deepNonLinearDynamicalSystem = DeepNonLinearDynamicalSystem()
 #deepNonLinearDynamicalSystem.load_weights('./log/adam/3/4/')
-#deepNonLinearDynamicalSystem.train(x_all_train, u_all_train, 4)
-deepNonLinearDynamicalSystem.train(x_all_train, u_all_train)
+#deepNonLinearDynamicalSystem.train(x_all_train, u_all_train, iter_EM_statr=4)
+'''
+T = 100
+x_all_train = x_all_train[:T]
+u_all_train = u_all_train[:T]
+locations_all_train = locations_all_train[:T]
+'''
+deepNonLinearDynamicalSystem.train(x_all_train, u_all_train, locations_all_train)
 #deepNonLinearDynamicalSystem.trainer.complementary_train(x_all_train, u_all_train)
 
 '''
@@ -69,7 +82,7 @@ x_all_test = [images[i].reshape([T,-1]) for i in range(images.shape[0])]
 u_dim = 2 ############
 u_all_test = [np.zeros([T-1,u_dim])] * images.shape[0]
 images=[]
-
+npzfile = []
 
 
 x_all_est = [None] * len(x_all_test)
